@@ -10,7 +10,7 @@
       <link>{{SITE_URL}}</link>
     </image>
     <generator>coil — https://github.com/mluggy/coil</generator>
-    <lastBuildDate>Sun, 10 May 2026 09:41:26 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 10 May 2026 11:24:31 GMT</lastBuildDate>
     <atom:link href="{{SITE_URL}}/rss.xml" rel="self" type="application/rss+xml" />
     <copyright>CC BY 4.0</copyright>
     <language>en</language>
@@ -31,5 +31,21 @@
     <podcast:publisher>Michael Lugassy</podcast:publisher>
     <podcast:updateFrequency>weekly</podcast:updateFrequency>
     <podcast:person role="host" href="https://x.com/mluggy">Michael Lugassy</podcast:person>
+    <item>
+      <title>Tesla Semi Production Ignites Amid FSD and Sales Gains</title>
+      <description>This episode covers the start of high-volume Tesla Semi production, FSD v14.3.2 rollout to HW4 vehicles, Tesla Insurance expansion to Florida and Maryland, strong April sales rebound in Europe, and progress on Optimus factory and AI5 chip.</description>
+      <link>{{SITE_URL}}/1</link>
+      <guid isPermaLink="false">s2026e1</guid>
+      <pubDate>Mon, 04 May 2026 00:00:00 GMT</pubDate>
+      <enclosure url="{{SITE_URL}}/s2026e1.mp3" length="0" type="audio/mpeg" />
+      <itunes:summary>This episode covers the start of high-volume Tesla Semi production, FSD v14.3.2 rollout to HW4 vehicles, Tesla Insurance expansion to Florida and Maryland, strong April sales rebound in Europe, and progress on Optimus factory and AI5 chip.</itunes:summary>
+      <itunes:explicit>no</itunes:explicit>
+      <itunes:duration>00:00</itunes:duration>
+      <itunes:image href="{{SITE_URL}}/s2026e1.jpg" />
+      <itunes:season>2026</itunes:season>
+      <itunes:episode>1</itunes:episode>
+      <itunes:episodeType>full</itunes:episodeType>
+      <dc:creator>Michael Lugassy</dc:creator>
+    </item>
   </channel>
 </rss>

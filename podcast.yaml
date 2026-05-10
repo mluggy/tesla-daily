@@ -190,7 +190,7 @@ gemini_model: gemini-pro-latest
 # -- Analytics --
 # Google Analytics 4 measurement ID (e.g. G-A1B2C3D4E5).
 # Leave empty to disable.
-ga_measurement_id: ""
+ga_measurement_id: "G-S7LBS7BLTF"
 
 # Facebook/Meta Pixel ID (e.g. 582193047164938).
 # Leave empty to disable.

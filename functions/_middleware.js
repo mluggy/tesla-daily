@@ -1090,6 +1090,12 @@ export async function onRequest({ request, next, env }) {
       if (r2Response) return r2Response;
     }
     const resp = await next();
+    // Pages' SPA fallback returns index.html (200, text/html) for any missing
+    // path. For an extensioned/asset request that's a real 404 — surface it.
+    const respType = resp.headers.get("content-type") || "";
+    if (resp.status === 200 && /^text\/html\b/i.test(respType) && !/\.html?$/i.test(path)) {
+      return errors.notFound(path);
+    }
     const cacheControl = path.startsWith("/assets/")
       ? ASSETS_CACHE_CONTROL
       : STATIC_CACHE_RULES[path];

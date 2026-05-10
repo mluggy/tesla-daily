@@ -91,22 +91,25 @@ def auto_content_dates(cadence: str, today: date) -> list[date]:
 
 def resolve_dates(args, cfg: dict, today: date,
                   last_pub: date | None) -> tuple[date, list[date]]:
-    """Returns (publication_date, list_of_content_dates)."""
+    """Returns (publication_date, list_of_content_dates).
+    Convention: pub_date = max(content_dates) + 1 day. Generation runs the
+    morning after the period it covers (Mon's auto run covers Fri-Sun)."""
     if args.date:
         d = date.fromisoformat(args.date)
-        return d, [d]
+        return d + timedelta(days=1), [d]
     if args.start and args.end:
         s = date.fromisoformat(args.start)
         e = date.fromisoformat(args.end)
         if e < s:
             raise SystemExit("--end must be >= --start")
-        return e, [s + timedelta(days=i) for i in range((e - s).days + 1)]
+        return e + timedelta(days=1), [s + timedelta(days=i) for i in range((e - s).days + 1)]
     if args.auto:
         cadence = cfg["cadence"]
         if not args.force and not is_publish_day(cadence, today, last_pub):
             print(f"[skip] cadence={cadence} — today {today} is not a publish day",
                   file=sys.stderr)
             sys.exit(0)
+        # auto_content_dates ends at yesterday → today = end + 1, no adjust.
         return today, auto_content_dates(cadence, today)
     raise SystemExit("Provide one of --date, --start/--end, or --auto")
 
@@ -638,6 +641,7 @@ def main():
         "season": season,
         "title": pass1["episode_title"],
         "description": pass1["episode_description"],
+        "date": pub_date.isoformat(),
         "cost": total_cost,
     }
     write_manifest(manifest)

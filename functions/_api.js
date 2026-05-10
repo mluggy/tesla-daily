@@ -117,6 +117,13 @@ export const errors = {
       message: `We don't have an episode #${id} on this show.`,
       hint: "/episodes.json — full catalog with valid IDs",
     }),
+  notFound: (path) =>
+    apiError({
+      status: 404,
+      code: "not_found",
+      message: `No file at ${path}.`,
+      hint: "/sitemap.xml — full list of valid paths",
+    }),
   methodNotAllowed: (allowed) =>
     apiError({
       status: 405,

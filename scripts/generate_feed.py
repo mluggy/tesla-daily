@@ -183,7 +183,7 @@ def build_feed(episodes_dir, config):
             pub_date_str = rfc2822_date(datetime.now(tz=timezone.utc))
 
         raw_title = ep_meta.get('title', '')
-        title = f"{ep_label} {episode_num}: {raw_title}" if raw_title else f"{ep_label} {episode_num}"
+        title = raw_title if raw_title else f"{ep_label} {episode_num}"
         description = ep_meta.get('description', '')
         explicit = ep_meta.get('explicit', config.get('explicit', False))
 
