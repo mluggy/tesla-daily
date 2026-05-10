@@ -36,7 +36,8 @@ except ImportError:
     pass
 
 EPISODES_DIR = ROOT / "episodes"
-CONFIG_PATH = ROOT / "config" / "digest.yaml"
+# digest.yaml lives at the project root (alongside podcast.yaml).
+CONFIG_PATH = ROOT / "digest.yaml"
 DEBUG_DIR = ROOT / ".tmp"
 TARGET_SR = 24000
 
