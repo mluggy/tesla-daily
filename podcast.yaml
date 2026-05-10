@@ -169,6 +169,12 @@ funding_url: https://github.com/sponsors/mluggy
 # AWS_REGION, and AWS_S3_BUCKET to be set as GitHub repository secrets.
 # The transcription language is derived automatically from language + country
 # above (e.g. language: en + country: US → en-US).
+# Allow LLM training crawlers (GPTBot, CCBot, ClaudeBot, etc.) to ingest
+# the site for training. Runtime browse-on-behalf agents (ChatGPT-User,
+# OAI-SearchBot, PerplexityBot, Claude-User, etc.) are always allowed
+# regardless. Set true for maximum agent-readiness scoring.
+ai_training: true
+
 transcribe: false
 
 # Gemini model used to correct AWS Transcribe output (runs only when
