@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from "fs";
+import config from "./load-config.js";
 
 const episodes = JSON.parse(readFileSync("public/episodes.json", "utf8"));
 
@@ -30,7 +31,47 @@ ${urls
 writeFileSync("public/sitemap.xml", xml);
 console.log(`Generated sitemap.xml with ${urls.length} URLs`);
 
-// Generate robots.txt with dynamic sitemap URL
-const robots = `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n`;
+// Generate robots.txt with Content-Signal hints + Schemamap pointer.
+// Live agent crawl (ChatGPT-User, OAI-SearchBot, PerplexityBot, ClaudeBot
+// search) is always allowed so the show stays discoverable in answer
+// engines. Training crawl (GPTBot, CCBot, Anthropic-AI for training,
+// Bytespider, ClaudeBot training) is gated on `ai_training` in podcast.yaml.
+const allowTraining = config.ai_training === true;
+const trainSignal = allowTraining ? "yes" : "no";
+const trainingBlocks = allowTraining
+  ? ""
+  : [
+      "",
+      "# Opt-out: training crawlers (set ai_training: true in podcast.yaml to allow).",
+      "User-agent: GPTBot",
+      "Disallow: /",
+      "",
+      "User-agent: CCBot",
+      "Disallow: /",
+      "",
+      "User-agent: anthropic-ai",
+      "Disallow: /",
+      "",
+      "User-agent: Bytespider",
+      "Disallow: /",
+      "",
+      "User-agent: Google-Extended",
+      "Disallow: /",
+      "",
+      "User-agent: Applebot-Extended",
+      "Disallow: /",
+    ].join("\n");
+
+const robots = [
+  "User-agent: *",
+  `Content-Signal: search=yes, ai-input=yes, ai-train=${trainSignal}`,
+  "Allow: /",
+  trainingBlocks,
+  "",
+  `Sitemap: ${SITE}/sitemap.xml`,
+  `Schemamap: ${SITE}/.well-known/schema-map.xml`,
+  "",
+].join("\n");
+
 writeFileSync("public/robots.txt", robots);
-console.log("Generated robots.txt");
+console.log(`Generated robots.txt (ai-train=${trainSignal})`);

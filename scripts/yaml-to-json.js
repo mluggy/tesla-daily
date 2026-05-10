@@ -137,6 +137,9 @@ for (const [idStr, ep] of Object.entries(yamlEpisodes)) {
     amazonUrl: amazonUrl(ep.amazon_id),
     youtubeUrl: youtubeUrl(ep.youtube_id),
     hasSrt: rss.hasSrt ?? hasSrtFile,
+    guests: Array.isArray(ep.guests) ? ep.guests : [],
+    topics: Array.isArray(ep.topics) ? ep.topics : [],
+    chapters: Array.isArray(ep.chapters) ? ep.chapters : [],
     _fullText: fullText,
   });
 }
@@ -150,6 +153,7 @@ function compact(obj) {
   const out = {};
   for (const [k, v] of Object.entries(obj)) {
     if (v === "" || v === 0 || v === null || v === undefined || v === false) continue;
+    if (Array.isArray(v) && v.length === 0) continue;
     out[k] = v;
   }
   return out;

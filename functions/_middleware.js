@@ -114,20 +114,71 @@ function buildJsonLd(episode, baseUrl) {
     config.linkedin_url,
   ].filter(Boolean);
 
+  const cover = `${baseUrl}${config.cover || "/cover.png"}`;
+  const topics = Array.isArray(config.topics) ? config.topics.filter(Boolean) : [];
+
+  // Person block for the host. Used on both homepage (top-level) and as
+  // `author` on episodes. Includes optional `host:` block from podcast.yaml.
+  const personSameAs = [config.x_url, config.linkedin_url, config.facebook_url, config.instagram_url, config.tiktok_url].filter(Boolean);
+  const wikidataId = config.host?.wikidata_id;
+  if (wikidataId) personSameAs.unshift(`https://www.wikidata.org/wiki/${wikidataId}`);
+  const person = {
+    "@type": "Person",
+    "@id": `${baseUrl}/#author`,
+    name: config.author,
+    ...(config.host?.job_title ? { jobTitle: config.host.job_title } : {}),
+    ...(config.host?.bio ? { description: config.host.bio } : {}),
+    ...(personSameAs.length ? { sameAs: personSameAs } : {}),
+  };
+
   if (!episode) {
-    return {
-      "@context": "https://schema.org",
+    // Homepage: emit a graph of PodcastSeries + WebSite (with SearchAction)
+    // + Person, so agents can resolve the host as an entity and find an
+    // episode-search action without scraping HTML.
+    const series = {
       "@type": "PodcastSeries",
+      "@id": `${baseUrl}/#podcast`,
       name: config.title,
       description: config.description,
       url: baseUrl,
-      image: `${baseUrl}/cover.png`,
+      image: cover,
       inLanguage: config.language,
-      author: { "@type": "Person", name: config.author },
+      author: { "@id": `${baseUrl}/#author` },
       webFeed: `${baseUrl}/rss.xml`,
-      sameAs,
+      ...(config.copyright ? { copyrightNotice: config.copyright } : {}),
+      ...(config.license ? { license: config.license } : {}),
+      ...(topics.length ? { keywords: topics.join(", ") } : {}),
+      ...(sameAs.length ? { sameAs } : {}),
+      speakable: {
+        "@type": "SpeakableSpecification",
+        cssSelector: ["h1", "header p"],
+      },
+    };
+
+    const website = {
+      "@type": "WebSite",
+      "@id": `${baseUrl}/#website`,
+      url: baseUrl,
+      name: config.title,
+      ...(config.description ? { description: config.description } : {}),
+      potentialAction: {
+        "@type": "SearchAction",
+        target: {
+          "@type": "EntryPoint",
+          urlTemplate: `${baseUrl}/api/search?q={search_term_string}`,
+        },
+        "query-input": "required name=search_term_string",
+      },
+    };
+
+    return {
+      "@context": "https://schema.org",
+      "@graph": [series, website, person],
     };
   }
+
+  const epTopics = Array.isArray(episode.topics) ? episode.topics.filter(Boolean) : [];
+  const epGuests = Array.isArray(episode.guests) ? episode.guests : [];
 
   const ld = {
     "@context": "https://schema.org",
@@ -138,15 +189,17 @@ function buildJsonLd(episode, baseUrl) {
     datePublished: episode.date,
     episodeNumber: episode.id,
     inLanguage: config.language,
-    author: { "@type": "Person", name: config.author },
+    author: person,
     partOfSeries: {
       "@type": "PodcastSeries",
+      "@id": `${baseUrl}/#podcast`,
       name: config.title,
       url: baseUrl,
     },
     associatedMedia: {
       "@type": "MediaObject",
       contentUrl: `${baseUrl}/${episode.audioFile}`,
+      encodingFormat: "audio/mpeg",
     },
     image: `${baseUrl}/s${episode.season}e${episode.id}.${config.cover_ext || "png"}`,
     sameAs: [
@@ -160,6 +213,59 @@ function buildJsonLd(episode, baseUrl) {
     const m = Math.floor(episode.seconds / 60);
     const s = episode.seconds % 60;
     ld.duration = `PT${m}M${s}S`;
+  }
+
+  // Transcript as a MediaObject — voice/answer engines that cite podcasts
+  // pick this up directly. Gated on hasSrt so agents don't 404.
+  if (episode.hasSrt) {
+    const txtUrl = `${baseUrl}/${episode.audioFile.replace(".mp3", ".txt")}`;
+    ld.transcript = {
+      "@type": "MediaObject",
+      contentUrl: txtUrl,
+      encodingFormat: "text/plain",
+      inLanguage: config.language,
+    };
+  }
+
+  // Topics → schema.org `about` (Thing). Helps "podcast about X" queries.
+  if (epTopics.length) {
+    ld.about = epTopics.map((t) => ({ "@type": "Thing", name: t }));
+    ld.keywords = epTopics.join(", ");
+  }
+
+  // Guests → schema.org `actor` (Person). Helps "podcast with <guest>" queries.
+  if (epGuests.length) {
+    ld.actor = epGuests
+      .map((g) =>
+        typeof g === "string"
+          ? { "@type": "Person", name: g }
+          : g.name
+            ? { "@type": "Person", name: g.name, ...(g.url ? { url: g.url } : {}) }
+            : null
+      )
+      .filter(Boolean);
+  }
+
+  // Chapters → schema.org `hasPart` (Clip with startOffset).
+  if (Array.isArray(episode.chapters) && episode.chapters.length) {
+    ld.hasPart = episode.chapters
+      .map((c) => {
+        const title = c.title || c.name;
+        if (!title) return null;
+        const startStr = c.start || c.time || "";
+        let startOffset;
+        if (startStr) {
+          const parts = startStr.split(":").map(Number);
+          if (parts.length === 3) startOffset = parts[0] * 3600 + parts[1] * 60 + parts[2];
+          else if (parts.length === 2) startOffset = parts[0] * 60 + parts[1];
+        }
+        return {
+          "@type": "Clip",
+          name: title,
+          ...(Number.isFinite(startOffset) ? { startOffset } : {}),
+        };
+      })
+      .filter(Boolean);
   }
 
   return ld;
@@ -391,19 +497,42 @@ async function serveR2(env, key, request) {
 
 // Static files that embed absolute URLs via a `{{SITE_URL}}` placeholder,
 // rewritten per-request so the same artifact works on any hostname.
-const SITE_URL_REWRITES = new Set(["/rss.xml", "/sitemap.xml", "/llms.txt", "/robots.txt"]);
+const SITE_URL_REWRITES = new Set([
+  "/rss.xml",
+  "/sitemap.xml",
+  "/llms.txt",
+  "/robots.txt",
+  "/index.md",
+  "/episodes/llms.txt",
+  "/.well-known/agent.json",
+  "/.well-known/agent-card.json",
+  "/.well-known/schema-map.xml",
+  "/.well-known/openapi.json",
+]);
 
 const REWRITE_CONTENT_TYPES = {
   "/rss.xml": "application/rss+xml; charset=utf-8",
   "/sitemap.xml": "application/xml; charset=utf-8",
   "/llms.txt": "text/plain; charset=utf-8",
   "/robots.txt": "text/plain; charset=utf-8",
+  "/index.md": "text/markdown; charset=utf-8",
+  "/episodes/llms.txt": "text/plain; charset=utf-8",
+  "/.well-known/agent.json": "application/json; charset=utf-8",
+  "/.well-known/agent-card.json": "application/json; charset=utf-8",
+  "/.well-known/schema-map.xml": "application/xml; charset=utf-8",
+  "/.well-known/openapi.json": "application/json; charset=utf-8",
 };
 
 const REWRITE_CACHE_CONTROL = {
   "/rss.xml": "public, max-age=300, stale-while-revalidate=604800",
   "/sitemap.xml": "public, max-age=3600, stale-while-revalidate=604800",
   "/llms.txt": "public, max-age=3600, stale-while-revalidate=604800",
+  "/index.md": "public, max-age=3600, stale-while-revalidate=604800",
+  "/episodes/llms.txt": "public, max-age=3600, stale-while-revalidate=604800",
+  "/.well-known/agent.json": "public, max-age=3600, stale-while-revalidate=604800",
+  "/.well-known/agent-card.json": "public, max-age=3600, stale-while-revalidate=604800",
+  "/.well-known/schema-map.xml": "public, max-age=3600, stale-while-revalidate=604800",
+  "/.well-known/openapi.json": "public, max-age=3600, stale-while-revalidate=604800",
 };
 
 // Cache rules for static files served through middleware (mirrors _headers)
@@ -437,6 +566,12 @@ export async function onRequest({ request, next, env }) {
   // Absolute-URL placeholders in generated static files
   if (SITE_URL_REWRITES.has(path)) {
     return rewriteSiteUrl(request, next);
+  }
+
+  // Pages Functions (search API, MCP server) handle their own paths.
+  // Pass through so file-based routes under functions/ can run.
+  if (path === "/mcp" || path.startsWith("/api/")) {
+    return next();
   }
 
   // Static assets: pass through to Pages with cache headers

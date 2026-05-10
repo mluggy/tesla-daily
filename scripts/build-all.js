@@ -16,6 +16,8 @@ const steps = [
   },
   { label: "generate-sitemap", cmd: "node scripts/generate-sitemap.js" },
   { label: "generate-llms", cmd: "node scripts/generate-llms.js" },
+  { label: "generate-agent-files", cmd: "node scripts/generate-agent-files.js" },
+  { label: "generate-openapi", cmd: "node scripts/generate-openapi.js" },
   { label: "vite build", cmd: "npx vite build" },
   { label: "generate-html-template", cmd: "node scripts/generate-html-template.js" },
 ];
