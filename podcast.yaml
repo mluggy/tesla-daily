@@ -108,7 +108,7 @@ apple_podcasts_id: "1772552096"
 # youtube.com/playlist?list={THIS_ID}. Used to construct the show URL.
 # Per-episode deep links use the episode's youtube_id from episodes.yaml
 # to link to the specific video within this playlist.
-youtube_id: ""
+youtube_id: "PLiIMhiebmscrja3JxmaZLSutImrFcIOe9"
 
 # Amazon Music podcast ID - the last part of your Amazon URL:
 # music.amazon.com/podcasts/{THIS_ID}. Used to construct the show URL
