@@ -58,8 +58,8 @@ jobs:
 
       - name: Commit and push
         run: |
-          git config user.name "tesla-daily[bot]"
-          git config user.email "tesla-daily[bot]@users.noreply.github.com"
+          git config user.name "tesla-weekly[bot]"
+          git config user.email "tesla-weekly[bot]@users.noreply.github.com"
           git add episodes/*.wav episodes/*.txt episodes/episodes.yaml
           if git diff --cached --quiet; then
             echo "No changes to commit (episode may already exist)."

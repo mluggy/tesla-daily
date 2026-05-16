@@ -6,7 +6,7 @@
 
 # ---- Show identity ---------------------------------------------------------
 # `season` in episodes.yaml is auto-derived from the publication date's year.
-show_name: "Tesla Daily"
+show_name: "Tesla Weekly"
 focus_areas: "Tesla (vehicles, energy, robotics, FSD, financials)"
 
 # ---- Cadence ---------------------------------------------------------------

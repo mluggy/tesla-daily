@@ -12,7 +12,7 @@
 # -- Show metadata --
 # Podcast name - shown in the header, RSS feed, downloaded files, and
 # browser tab.
-title: Tesla Daily
+title: Tesla Weekly
 
 # Short tagline - appears under the title and in meta description tags.
 description: Tesla, EVs & Autonomous Driving Weekly Podcast
@@ -147,7 +147,7 @@ github_username: "mluggy"
 
 # GitHub repo for this site (used in JSON-LD sameAs to link the public
 # site to its source repo — enables agent platform discovery checks).
-github_url: "https://github.com/mluggy/tesla-daily"
+github_url: "https://github.com/mluggy/tesla-weekly"
 linkedin_url: "https://www.linkedin.com/in/mluggy/"
 
 # -- Player defaults --
